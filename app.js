@@ -5,50 +5,26 @@ const bodyParser = require('body-parser')
 const express = require('express')
 const app = express()
 
+const api = process.env.API_URL
+
+const productsRouter = require('./routers/products')
+const categoriesRouter = require('./routers/categories')
+const ordersRouter = require('./routers/orders')
+const usersRouter = require('./routers/users')
+
 //middleware
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
 
-const productSchema = mongoose.Schema({
-    name: String,
-    image: String,
-    stock: {
-        type: Number,
-        required: true,
-    },
-})
-
-const Product = mongoose.model('Product', productSchema)
-
-const api = process.env.API_URL
-
+//routers
 app.get('/', async (req, res) => {
     res.send('Hello api!')
 })
+app.use(`${api}/products`, productsRouter)
+app.use(`${api}/categories`, categoriesRouter)
+app.use(`${api}/orders`, ordersRouter)
+app.use(`${api}/users`, usersRouter)
 
-app.get(`${api}/products`, async (req, res) => {
-    const productList = await Product.find()
-    res.send(productList)
-})
-
-app.post(`${api}/products`, (req, res) => {
-    const product = new Product({
-        name: req.body.name,
-        image: req.body.image,
-        stock: req.body.stock,
-    })
-    product
-        .save()
-        .then((createdProduct) => {
-            res.status(201).json(createdProduct)
-        })
-        .catch((err) => {
-            res.status(500).json({
-                error: err,
-                success: false,
-            })
-        })
-})
 
 mongoose
     .connect(process.env.MONGO_CONNECTION_STRING)
