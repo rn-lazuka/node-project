@@ -11,6 +11,10 @@ const productsRouter = require('./routers/products')
 const categoriesRouter = require('./routers/categories')
 const ordersRouter = require('./routers/orders')
 const usersRouter = require('./routers/users')
+const cors = require('cors')
+
+app.use(cors())
+app.options('*', cors())
 
 //middleware
 app.use(bodyParser.json())
@@ -24,7 +28,6 @@ app.use(`${api}/products`, productsRouter)
 app.use(`${api}/categories`, categoriesRouter)
 app.use(`${api}/orders`, ordersRouter)
 app.use(`${api}/users`, usersRouter)
-
 
 mongoose
     .connect(process.env.MONGO_CONNECTION_STRING)
