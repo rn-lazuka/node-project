@@ -46,7 +46,7 @@ router.put('/:id', async (req, res) => {
     )
 
     !category
-        ? res.status(404).send('the category cannot be created!')
+        ? res.status(404).send('Can not find category with such ID!')
         : res.send(category)
 })
 
@@ -64,5 +64,6 @@ router.delete('/:id', async (req, res) => {
         res.status(400).json({ status: false, error })
     }
 })
+
 
 module.exports = router
