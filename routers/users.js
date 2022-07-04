@@ -1,13 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const {User} = require('../models/user')
+const { User } = require('../models/user')
 const bcrypt = require('bcryptjs')
-const {Category} = require("../models/category");
+const jwt = require('jsonwebtoken')
 
 router.get('/', async (req, res) => {
     const productList = await User.find().select('-passwordHash')
     if (!productList) {
-        res.status(500).json({success: false})
+        res.status(500).json({ success: false })
     }
     res.send(productList)
 })
@@ -36,9 +36,29 @@ router.post('/', async (req, res) => {
         isAdmin: req.body.isAdmin,
     })
     user = await user.save()
-    !user
-        ? res.status(404).send('the user cannot be created!')
-        : res.send(user)
+    !user ? res.status(404).send('the user cannot be created!') : res.send(user)
 })
 
-module.exports = router;
+router.post('/login', async (req, res) => {
+    const user = await User.findOne({ email: req.body.email })
+    const secret = process.env.secret
+    if (!user) {
+        return res.status(400).send('The user not found!')
+    }
+    if (bcrypt.compareSync(req.body.password, user.passwordHash)) {
+        const token = jwt.sign(
+            {
+                userId: user.id,
+                isAdmin: user.isAdmin
+            },
+            secret,
+            { expiresIn: '1d' }
+        )
+
+        res.status(200).send({ user: user.email, token })
+    } else {
+        res.status(400).send('Password is wrong!')
+    }
+})
+
+module.exports = router

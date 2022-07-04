@@ -12,6 +12,8 @@ const categoriesRouter = require('./routers/categories')
 const ordersRouter = require('./routers/orders')
 const usersRouter = require('./routers/users')
 const cors = require('cors')
+const authJwt = require('./helpers/jwt');
+const errorHandler = require("./helpers/error-handler");
 
 app.use(cors())
 app.options('*', cors())
@@ -19,6 +21,8 @@ app.options('*', cors())
 //middleware
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
+app.use(authJwt())
+app.use(errorHandler)
 
 //routers
 app.get('/', async (req, res) => {
