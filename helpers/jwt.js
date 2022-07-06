@@ -17,16 +17,8 @@ function authJwt() {
     })
 }
 
-async function isRevoked(req, payload, done) {
-    //need to be changed
-    console.log('123')
-    if (!payload.payload.isAdmin) {
-        console.log('2345')
-        done(null, true)
-        return false
-    }
-    console.log('345')
-    return true
+async function isRevoked(req, token) {
+    return !token.payload.isAdmin;
 }
 
 module.exports = authJwt;
