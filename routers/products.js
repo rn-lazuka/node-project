@@ -5,7 +5,7 @@ const {Category} = require('../models/category')
 const mongoose = require('mongoose')
 const multer = require('multer')
 
-const FILE_TYPE_MAP ={
+const FILE_TYPE_MAP = {
     'image/png': 'png',
     'image/jpeg': 'jpeg',
     'image/jpg': 'jpg',
@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const isValid = FILE_TYPE_MAP[file.mimetype]
         let uploadError = new Error('invalid image type')
-        if(isValid) {
+        if (isValid) {
             uploadError = null
         }
         cb(uploadError, 'public/uploads')
@@ -23,8 +23,8 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         const fileName = file.originalname.split(' ').join('-')
         const extension = FILE_TYPE_MAP[file.mimetype]
-        cb(null, `${fileName}${Date.now()}.${extension}` )
-    }
+        cb(null, `${fileName}${Date.now()}.${extension}`)
+    },
 })
 
 const upload = multer({storage: storage})
@@ -71,12 +71,15 @@ router.get(`/get/featured/:count`, async (req, res) => {
     res.status(200).json({total: product})
 })
 
-router.post('/', upload.single('image'),async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
     const category = await Category.findById(req.body.category)
     if (!category) res.status(400).send('invalid category!')
 
+    const file = req.file
+    if (!file) res.status(400).send('no images in the request!')
+
     const fileName = req.file.filename
-const basePath = `${req.protocol}://${req.get('host')}/public/uploads`
+    const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`
     let product = new Product({
         name: req.body.name,
         description: req.body.description,
@@ -125,6 +128,33 @@ router.put('/:id', async (req, res) => {
         ? res.status(404).send('Can not find product with such ID!')
         : res.send(product)
 })
+
+router.put(
+    '/gallery-images/:id',
+    upload.array('images', 10),
+    async (req, res) => {
+        const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`
+        const {files} = req
+        let imagesPaths = []
+        if (files) {
+            files.map(file => {
+                imagesPaths.push(`${basePath}${file.filename}`)
+            })
+        }
+
+        let product = await Product.findByIdAndUpdate(
+            req.params.id,
+            {
+                images: imagesPaths,
+            },
+            {new: true}
+        )
+
+        !product
+            ? res.status(404).send('Can not find product with such ID!')
+            : res.send(product)
+    }
+)
 
 router.delete('/:id', async (req, res) => {
     if (!mongoose.isValidObjectId(req.params.id)) {
